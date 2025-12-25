@@ -1,0 +1,168 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #74ebd5, #acb6e5);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+}
+
+.header h1 {
+    font-size: 24px;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.main-content {
+    margin-top: 20px;
+}
+
+.state-container {
+    text-align: center;
+    padding: 40px;
+    color: #333;
+}
+
+.loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ddd;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+.weather-container {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.location-selector h2 {
+    margin-bottom: 10px;
+}
+
+.saved-cities {
+    margin: 15px 0;
+}
+
+.city-buttons button {
+    margin: 5px;
+}
+
+.weather-section {
+    margin-top: 20px;
+}
+
+.weather-card {
+    background: #f3f3f3;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.today {
+    font-size: 18px;
+}
+
+.forecast-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #fff;
+}
+
+/* ===== MODAL ===== */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #fff;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 10px;
+}
+
+.modal-header {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-body {
+    padding: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+}
+
+.suggestions div {
+    padding: 6px;
+    cursor: pointer;
+}
+
+.suggestions div:hover {
+    background: #eee;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

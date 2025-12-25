@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прогноз погоды</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-cloud-sun"></i> Прогноз погоды</h1>
+            <div class="header-controls">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Обновить
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Состояние загрузки -->
+            <div id="loadingState" class="state-container loading">
+                <div class="spinner"></div>
+                <p>Загрузка данных о погоде...</p>
+            </div>
+
+            <!-- Состояние ошибки -->
+            <div id="errorState" class="state-container error" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Произошла ошибка</h3>
+                <p id="errorMessage"></p>
+                <button id="retryBtn" class="btn btn-primary">Попробовать снова</button>
+            </div>
+
+            <!-- Контейнер для погоды -->
+            <div id="weatherContainer" class="weather-container" style="display: none;">
+                <div class="location-selector">
+                    <div class="current-location">
+                        <h2><i class="fas fa-map-marker-alt"></i> <span id="currentLocation">Текущее местоположение</span></h2>
+                    </div>
+                    
+                    <div class="saved-cities" id="savedCitiesContainer">
+                        <h3>Сохранённые города:</h3>
+                        <div class="city-buttons" id="savedCitiesList"></div>
+                    </div>
+                </div>
+
+                <!-- Прогноз на сегодня -->
+                <section class="weather-section today-forecast">
+                    <h3>Прогноз на сегодня</h3>
+                    <div class="weather-card today" id="todayForecast">
+                        <!-- Данные будут загружены через JS -->
+                    </div>
+                </section>
+
+                <!-- Прогноз на следующие дни -->
+                <section class="weather-section daily-forecast">
+                    <h3>Прогноз на следующие дни</h3>
+                    <div class="forecast-cards" id="dailyForecast">
+                        <!-- Данные будут загружены через JS -->
+                    </div>
+                </section>
+
+                <!-- Форма добавления города -->
+                <section class="add-city-section">
+                    <button id="addCityBtn" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> Добавить город
+                    </button>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Лабораторная работа по веб-разработке</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для добавления города -->
+    <div id="addCityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Добавить город</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Введите название города для добавления в список</p>
+                <div class="form-group">
+                    <input type="text" id="cityInput" placeholder="Начните вводить название города...">
+                    <div id="citySuggestions" class="suggestions"></div>
+                    <div id="cityError" class="error-message"></div>
+                </div>
+                <div class="modal-actions">
+                    <button id="saveCityBtn" class="btn btn-primary">Добавить</button>
+                    <button id="cancelCityBtn" class="btn btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
