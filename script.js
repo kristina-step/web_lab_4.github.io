@@ -170,17 +170,21 @@ async function getCityNameByCoords(lat, lon) {
 }
 
 async function loadWeatherForAllCities() {
-    if (state.cities.length === 0) return;
-    
+    if (state.cities.length === 0) {
+        hideLoading();      
+        showAddCityModal();  
+        return;
+    }
+
     showLoading();
     state.error = null;
-    
+
     try {
         const promises = state.cities.map(async (city, index) => {
             const weatherData = await getWeatherData(city.lat, city.lon);
             state.weatherData[index] = weatherData;
         });
-        
+
         await Promise.all(promises);
         updateCitiesList();
         showWeather(state.currentCityIndex);
@@ -188,6 +192,7 @@ async function loadWeatherForAllCities() {
         showError('Ошибка при загрузке данных о погоде');
     }
 }
+
 
 async function getWeatherData(lat, lon) {
     const url = `${CONFIG.BASE_URL}/weather?lat=${lat}&lon=${lon}&units=${CONFIG.UNITS}&lang=${CONFIG.LANG}&appid=${CONFIG.API_KEY}`;
@@ -585,5 +590,6 @@ setInterval(() => {
         });
     }
 }, 60000);
+
 
 
