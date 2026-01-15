@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     loadState();
     setupEvents();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
 
     if (state.cities.length === 0) {
         requestGeolocation();
@@ -65,8 +67,29 @@ function setupEvents() {
     el.cancelBtn.addEventListener('click', hideModal);
     el.addCitySubmit.addEventListener('click', addCityFromInput);
 
+    document.querySelectorAll('.city-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            addCityByName(btn.dataset.city);
+        });
+    });
+
     el.modal.addEventListener('click', e => {
         if (e.target === el.modal) hideModal();
+    });
+}
+
+function updateDateTime() {
+    const now = new Date();
+
+    el.locationDate.textContent = now.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+    });
+
+    el.locationTime.textContent = now.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }
 
@@ -138,7 +161,7 @@ function buildForecast(list) {
     list.forEach(i => {
         const d = new Date(i.dt * 1000).toLocaleDateString('ru-RU', { weekday:'short', day:'numeric', month:'short' });
         if (!days[d]) {
-            days[d] = { date:d, min:i.main.temp_min, max:i.main.temp_max, icon:i.weather[0].icon, desc:i.weather[0].description };
+            days[d] = { date:d, min:i.main.temp_min, max:i.main.temp_max, icon:i.weather[0].icon };
         } else {
             days[d].min = Math.min(days[d].min, i.main.temp_min);
             days[d].max = Math.max(days[d].max, i.main.temp_max);
@@ -149,6 +172,8 @@ function buildForecast(list) {
 
 function showWeather(i) {
     hideLoading();
+    updateDateTime();
+
     const city = state.cities[i];
     const w = state.weatherData[i].current;
 
@@ -158,7 +183,7 @@ function showWeather(i) {
     el.windSpeed.textContent = `${w.wind.speed} м/с`;
     el.humidity.textContent = `${w.main.humidity}%`;
     el.pressure.textContent = `${w.main.pressure} гПа`;
-    el.visibility.textContent = `${(w.visibility/1000).toFixed(1)} км`;
+    el.visibility.textContent = `${(w.visibility / 1000).toFixed(1)} км`;
 
     updateForecast(state.weatherData[i].forecast);
 
@@ -210,7 +235,7 @@ function updateCitiesList() {
 }
 
 function removeCity(i) {
-    state.cities.splice(i,1);
+    state.cities.splice(i, 1);
     saveState();
     loadWeatherForAllCities();
 }
@@ -227,9 +252,7 @@ function updateForecast(days) {
 
         const icon = document.createElement('div');
         icon.className = 'forecast-icon';
-        const i = document.createElement('i');
-        i.className = getIcon(d.icon);
-        icon.append(i);
+        icon.innerHTML = `<i class="${getIcon(d.icon)}"></i>`;
 
         const temps = document.createElement('div');
         temps.className = 'forecast-temp';
@@ -242,14 +265,24 @@ function updateForecast(days) {
         min.className = 'temp-low';
         min.textContent = `${Math.round(d.min)}°`;
 
-        temps.append(max,min);
-        card.append(date,icon,temps);
+        temps.append(max, min);
+        card.append(date, icon, temps);
         el.forecastCards.append(card);
     });
 }
 
 function getIcon(code) {
-    const m = { '01':'fas fa-sun','02':'fas fa-cloud-sun','03':'fas fa-cloud','04':'fas fa-cloud','09':'fas fa-cloud-rain','10':'fas fa-cloud-sun-rain','11':'fas fa-bolt','13':'fas fa-snowflake','50':'fas fa-smog'};
+    const m = {
+        '01':'fas fa-sun',
+        '02':'fas fa-cloud-sun',
+        '03':'fas fa-cloud',
+        '04':'fas fa-cloud',
+        '09':'fas fa-cloud-rain',
+        '10':'fas fa-cloud-sun-rain',
+        '11':'fas fa-bolt',
+        '13':'fas fa-snowflake',
+        '50':'fas fa-smog'
+    };
     return m[code.slice(0,2)] || 'fas fa-cloud';
 }
 
@@ -271,10 +304,18 @@ function showError(msg) {
 async function addCityFromInput() {
     const name = el.cityInput.value.trim();
     if (!name) return;
+    await addCityByName(name);
+}
 
-    const geo = await fetch(`${CONFIG.GEO_URL}/direct?q=${name}&limit=1&appid=${CONFIG.API_KEY}`).then(r=>r.json());
+async function addCityByName(name) {
+    const geo = await fetch(`${CONFIG.GEO_URL}/direct?q=${name}&limit=1&appid=${CONFIG.API_KEY}`).then(r => r.json());
     if (!geo[0]) {
         el.cityError.textContent = 'Город не найден';
+        return;
+    }
+
+    if (state.cities.some(c => c.lat === geo[0].lat && c.lon === geo[0].lon)) {
+        hideModal();
         return;
     }
 
@@ -283,7 +324,7 @@ async function addCityFromInput() {
         displayName: geo[0].local_names?.ru || name,
         lat: geo[0].lat,
         lon: geo[0].lon,
-        isCurrentLocation:false
+        isCurrentLocation: false
     });
 
     saveState();
