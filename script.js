@@ -95,12 +95,12 @@ function setupEventListeners() {
         if (e.target === elements.modalOverlay) hideAddCityModal();
     });
 
-    // elements.cityInput.addEventListener('input', handleCityInput);
-    // elements.addCitySubmit.addEventListener('click', addCityFromInput);
+    elements.cityInput.addEventListener('input', handleCityInput);
+    elements.addCitySubmit.addEventListener('click', addCityFromInput);
 
-    // elements.cityInput.addEventListener('keydown', e => {
-    //     if (e.key === 'Enter') addCityFromInput();
-    // });
+    elements.cityInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addCityFromInput();
+    });
 
     document.querySelectorAll('.city-chip').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -392,4 +392,5 @@ function getDailyForecast(list) {
 
     return Object.values(days).slice(0, 3);
 }
+
 
