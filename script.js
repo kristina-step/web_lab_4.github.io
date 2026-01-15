@@ -10,9 +10,7 @@ const CONFIG = {
 const state = {
     cities: [],
     currentCityIndex: 0,
-    weatherData: {},
-    isLoading: false,
-    error: null
+    weatherData: {}
 };
 
 const elements = {
@@ -38,17 +36,15 @@ const elements = {
     visibility: document.getElementById('visibility'),
 
     citiesList: document.getElementById('cities-list'),
+    forecastCards: document.querySelector('.forecast-cards'),
 
     modalOverlay: document.getElementById('modal-overlay'),
     modalClose: document.getElementById('modal-close'),
     cancelBtn: document.getElementById('cancel-btn'),
     cityInput: document.getElementById('city-input'),
     cityError: document.getElementById('city-error'),
-    addCitySubmit: document.getElementById('add-city-submit'),
-
-    forecastCards: document.querySelector('.forecast-cards')
+    addCitySubmit: document.getElementById('add-city-submit')
 };
-
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -64,14 +60,13 @@ async function init() {
     }
 }
 
-
 function loadState() {
     const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-    if (saved) {
-        const data = JSON.parse(saved);
-        state.cities = data.cities || [];
-        state.currentCityIndex = data.currentCityIndex || 0;
-    }
+    if (!saved) return;
+
+    const data = JSON.parse(saved);
+    state.cities = data.cities || [];
+    state.currentCityIndex = data.currentCityIndex || 0;
 }
 
 function saveState() {
@@ -80,7 +75,6 @@ function saveState() {
         currentCityIndex: state.currentCityIndex
     }));
 }
-
 
 function setupEventListeners() {
     elements.refreshBtn.addEventListener('click', loadWeatherForAllCities);
@@ -93,12 +87,17 @@ function setupEventListeners() {
     });
 
     elements.addCitySubmit.addEventListener('click', addCityFromInput);
-
     elements.cityInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') addCityFromInput();
     });
-}
 
+    document.querySelectorAll('.city-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            elements.cityInput.value = chip.dataset.city;
+            showAddCityModal();
+        });
+    });
+}
 
 function requestGeolocation() {
     if (!navigator.geolocation) {
@@ -129,18 +128,18 @@ function requestGeolocation() {
     });
 }
 
-
 async function loadWeatherForAllCities() {
     if (state.cities.length === 0) return;
 
     showLoading();
 
     try {
-        const tasks = state.cities.map(async (city, i) => {
-            state.weatherData[i] = await getWeatherData(city.lat, city.lon);
-        });
+        await Promise.all(
+            state.cities.map(async (city, i) => {
+                state.weatherData[i] = await getWeatherData(city.lat, city.lon);
+            })
+        );
 
-        await Promise.all(tasks);
         updateCitiesList();
         showWeather(state.currentCityIndex);
     } catch {
@@ -153,6 +152,7 @@ async function getWeatherData(lat, lon) {
     const forecastUrl = `${CONFIG.BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=${CONFIG.UNITS}&lang=${CONFIG.LANG}&appid=${CONFIG.API_KEY}`;
 
     const [w, f] = await Promise.all([fetch(weatherUrl), fetch(forecastUrl)]);
+
     return {
         current: await w.json(),
         forecast: getDailyForecast((await f.json()).list)
@@ -174,7 +174,6 @@ function getDailyForecast(list) {
                 date,
                 temp_min: item.main.temp_min,
                 temp_max: item.main.temp_max,
-                icon: item.weather[0].icon,
                 description: item.weather[0].description
             };
         } else {
@@ -186,7 +185,6 @@ function getDailyForecast(list) {
     return Object.values(days).slice(0, 3);
 }
 
-
 function showWeather(index) {
     const data = state.weatherData[index];
     if (!data) return;
@@ -197,16 +195,16 @@ function showWeather(index) {
     const city = state.cities[index];
     const now = new Date();
 
-    elements.locationName.innerHTML =
-        `<i class="fas fa-${city.isCurrentLocation ? 'location-dot' : 'city'}"></i>
-         <span>${city.displayName}</span>`;
-
+    elements.locationName.textContent = city.displayName;
     elements.locationDate.textContent = now.toLocaleDateString('ru-RU', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
     });
-
     elements.locationTime.textContent = now.toLocaleTimeString('ru-RU', {
-        hour: '2-digit', minute: '2-digit'
+        hour: '2-digit',
+        minute: '2-digit'
     });
 
     elements.currentTemp.textContent = Math.round(data.current.main.temp);
@@ -215,9 +213,6 @@ function showWeather(index) {
     elements.humidity.textContent = `${data.current.main.humidity}%`;
     elements.pressure.textContent = `${data.current.main.pressure} гПа`;
     elements.visibility.textContent = `${(data.current.visibility / 1000).toFixed(1)} км`;
-
-    elements.weatherIcon.innerHTML =
-        `<i class="fas fa-cloud"></i>`;
 
     updateForecast(data.forecast);
 
@@ -232,15 +227,16 @@ function updateForecast(forecast) {
         const card = document.createElement('div');
         card.className = 'forecast-card';
 
-        card.innerHTML = `
-            <div class="forecast-date">${day.date}</div>
-            <div class="forecast-temp">
-                <div>${Math.round(day.temp_max)}°</div>
-                <div>${Math.round(day.temp_min)}°</div>
-            </div>
-            <div>${day.description}</div>
-        `;
+        const date = document.createElement('div');
+        date.textContent = day.date;
 
+        const temps = document.createElement('div');
+        temps.textContent = `${Math.round(day.temp_max)}° / ${Math.round(day.temp_min)}°`;
+
+        const desc = document.createElement('div');
+        desc.textContent = day.description;
+
+        card.append(date, temps, desc);
         elements.forecastCards.appendChild(card);
     });
 }
@@ -249,25 +245,62 @@ function updateCitiesList() {
     elements.citiesList.innerHTML = '';
 
     state.cities.forEach((city, i) => {
-        const el = document.createElement('div');
-        el.className = `city-item ${i === state.currentCityIndex ? 'active' : ''}`;
+        const item = document.createElement('div');
+        item.className = `city-item ${i === state.currentCityIndex ? 'active' : ''}`;
 
-        el.innerHTML = `
-            <span>${city.displayName}</span>
-            <span>${Math.round(state.weatherData[i]?.current.main.temp ?? 0)}°</span>
-        `;
+        const info = document.createElement('div');
+        info.textContent = `${city.displayName} — ${Math.round(state.weatherData[i]?.current.main.temp ?? 0)}°`;
 
-        el.addEventListener('click', () => {
+        item.appendChild(info);
+
+        if (!city.isCurrentLocation) {
+            const btn = document.createElement('button');
+            btn.className = 'city-remove';
+            btn.textContent = '✕';
+
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                removeCity(i);
+            });
+
+            item.appendChild(btn);
+        }
+
+        item.addEventListener('click', () => {
             state.currentCityIndex = i;
             saveState();
             showWeather(i);
             updateCitiesList();
         });
 
-        elements.citiesList.appendChild(el);
+        elements.citiesList.appendChild(item);
     });
 }
 
+function removeCity(index) {
+    if (state.cities[index].isCurrentLocation) return;
+
+    state.cities.splice(index, 1);
+
+    const newData = {};
+    Object.keys(state.weatherData).forEach(k => {
+        const i = Number(k);
+        if (i < index) newData[i] = state.weatherData[i];
+        if (i > index) newData[i - 1] = state.weatherData[i];
+    });
+    state.weatherData = newData;
+
+    state.currentCityIndex = Math.max(0, state.currentCityIndex - 1);
+
+    saveState();
+    updateCitiesList();
+
+    if (state.cities.length > 0) {
+        showWeather(state.currentCityIndex);
+    } else {
+        requestGeolocation();
+    }
+}
 
 async function addCityFromInput() {
     const name = elements.cityInput.value.trim();
@@ -305,7 +338,6 @@ async function addCityFromInput() {
 
         state.currentCityIndex = state.cities.length - 1;
         showWeather(state.currentCityIndex);
-
     } finally {
         elements.addCitySubmit.disabled = false;
     }
@@ -316,7 +348,6 @@ async function getCityCoordinates(name) {
     const res = await fetch(url);
     return (await res.json())[0];
 }
-
 
 function showAddCityModal() {
     elements.modalOverlay.style.display = 'flex';
