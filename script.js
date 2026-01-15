@@ -93,10 +93,6 @@ function setupEventListeners() {
     elements.modalOverlay.addEventListener('click', (e) => {
         if (e.target === elements.modalOverlay) {
             hideAddCityModal();
-    // document.getElementById('reset-btn')?.addEventListener('click', () => {
-    // if (confirm('Вы уверены, что хотите сбросить все данные?')) {
-    //     localStorage.clear();
-    //     location.reload();
         }
     });
     
@@ -590,6 +586,7 @@ setInterval(() => {
         });
     }
 }, 60000);
+
 
 
 
